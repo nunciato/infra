@@ -1,0 +1,30 @@
+name: infra
+runtime: nodejs
+description:
+template:
+  description:
+  config:
+    aws:region:
+      description: The AWS region to deploy into (`us-east-1`, `us-west-2`, `eu-west-1`)
+      default: us-west-2
+    deployDashboard:
+      description: Whether or not to deploy the Kubernetes dashboard to the cluster
+      default: "true"
+    desiredCapacity:
+      description: The number of worker nodes that should be running in the cluster
+      default: "2"
+    instanceType:
+      description: The instance type to use for the cluster's nodes
+      default: t2.medium
+    maxSize:
+      description: The maximum number of worker nodes running in the cluster
+      default: "2"
+    minSize:
+      description: The minimum number of worker nodes running in the cluster
+      default: "1"
+    storageClass:
+      description: Create a storage class for the given volume type and make it the
+        cluster's default StorageClass
+      default: gp2
+    identityStackName:
+      description: The name of the identity stack.

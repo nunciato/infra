@@ -1,0 +1,28 @@
+language: node_js
+
+before_install:
+
+  # Install AWS CLI
+  - pip install --user awscli
+
+  # Install Pulumi
+  - curl -fsSL https://get.pulumi.com | sh
+  - export PATH="/home/travis/.pulumi/bin:/home/travis/bin:$PATH"
+  - pulumi version
+  - pulumi login
+
+  # Install AWS IAM Authenticator
+  - curl -Lo aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.11.5/2018-12-06/bin/linux/amd64/aws-iam-authenticator
+  - chmod +x aws-iam-authenticator
+  - mv aws-iam-authenticator /home/travis/bin/
+  - ls -al /home/travis/bin/
+  - aws-iam-authenticator version
+
+  # Install kubectl
+  - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v1.7.0/bin/linux/amd64/kubectl
+  - chmod +x kubectl
+  - mv kubectl /home/travis/bin/
+  - kubectl version --client
+
+script:
+  - ./scripts/travis_${TRAVIS_EVENT_TYPE}.sh
