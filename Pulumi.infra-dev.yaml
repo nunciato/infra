@@ -1,3 +1,7 @@
 config:
   aws:region: us-west-2
+  infra:blogDatabasePassword:
+    secure: AAABAHR3LrhJb26+dbYD+a28qKCSZ+3b7v3OC3SO5e1dp+ET98b0HYohjZL367o=
+  infra:blogDatabaseUsername:
+    secure: AAABABxJxLX4UEPVnUffkGoqHOooAKKXkWUkbHbexMeeyCilppY7bZvy
   infra:identityStackName: nunciato/identity-dev

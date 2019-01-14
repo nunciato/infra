@@ -20,8 +20,8 @@ const identityStack = new pulumi.StackReference("identityStack", { name: identit
 const infraRoleArn = identityStack.getOutput("infraRoleArn");
 const appRoleArn = identityStack.getOutput("appRoleArn");
 
-// Create a VPC for our cluster.
-const network = new awsinfra.Network("eksNetwork");
+// Create a VPC for our cluster and other resources.
+const network = new awsinfra.Network("network");
 
 // Create an EKS cluster with the given configuration.
 const cluster = new eks.Cluster(
@@ -52,3 +52,58 @@ const cluster = new eks.Cluster(
 
 // Export the cluster's kubeconfig.
 export const kubeconfig = cluster.kubeconfig;
+
+const mySQL = {
+    engine: "mysql",
+    port: 3306,
+};
+
+const dbCommon = {
+    engine: mySQL.engine,
+    port: mySQL.port,
+    subnetGroup: new aws.rds.SubnetGroup("dbSubnetGroup".toLowerCase(), {
+        subnetIds: network.subnetIds,
+    }),
+    securityGroup: new aws.ec2.SecurityGroup("dbSecurityGroup".toLowerCase(), {
+        vpcId: network.vpcId,
+        ingress: [
+            {
+                fromPort: mySQL.port,
+                toPort: mySQL.port,
+                protocol: "TCP",
+                cidrBlocks: [
+                    "0.0.0.0/0",
+                ],
+                ipv6CidrBlocks: [
+                    "::/0"
+                ],
+            },
+        ],
+    }),
+};
+
+// Create a database for the blog.
+const blogDatabase = new aws.rds.Instance("blogDatabase".toLowerCase(), {
+    engine: dbCommon.engine,
+    port: dbCommon.port,
+    name: "blog",
+    username: config.require("blogDatabaseUsername"),
+    password: config.require("blogDatabasePassword"),
+    instanceClass: "db.t2.small",
+    allocatedStorage: 20,
+    vpcSecurityGroupIds: [ dbCommon.securityGroup.id ],
+    dbSubnetGroupName: dbCommon.subnetGroup.id,
+    finalSnapshotIdentifier: new aws.s3.Bucket("blogDatabaseFinalSnapshot").id
+});
+
+// Export the database configuration for use by applications.
+export let dbConfig = {
+    blog: {
+        client: dbCommon.engine,
+        host: blogDatabase.endpoint.apply(endpoint => endpoint.replace(":3306", "")),
+        port: dbCommon.port,
+        user: blogDatabase.username,
+        password: blogDatabase.password,
+        database: blogDatabase.name,
+    }
+};
